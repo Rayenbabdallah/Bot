@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+data_files/*.parquet
+data_files/*.csv
+!data_files/news_calendar_sample.csv
+.pytest_cache/
+*.png
+.ipynb_checkpoints/

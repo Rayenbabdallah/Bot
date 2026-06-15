@@ -1,0 +1,42 @@
+# Gold (XAU/USD) bot configuration
+# Stage 1 baseline: session-filtered EMA trend-pullback strategy on M15/H1 with ATR stops.
+
+data:
+  symbol: "GC=F"          # yfinance ticker for Gold futures (proxy for XAU/USD); try "XAUUSD=X" too
+  interval: "15m"         # bar interval: 15m / 1h
+  period: "60d"           # yfinance lookback window (15m data is limited to ~60d on yfinance)
+  cache_path: "data_files/xauusd_15m.parquet"
+
+strategy:
+  fast_ema: 20
+  slow_ema: 50
+  trend_ema: 200
+  atr_period: 14
+  atr_stop_mult: 2.0      # stop loss = entry +/- atr_stop_mult * ATR
+  reward_risk: 2.0         # take profit = stop_distance * reward_risk
+  pullback_lookback: 5    # bars to look back for swing high/low breakout trigger
+  session_start_utc: "12:00"
+  session_end_utc: "16:00"
+  trade_days: [1, 2, 3, 4]  # Mon=0 ... Sun=6; default Tue-Fri (per guide: Mondays range, Fridays thin)
+
+risk:
+  risk_per_trade_pct: 0.5       # % of equity risked per trade
+  daily_loss_limit_pct: 5.0     # prop-firm style hard daily loss limit (equity based)
+  daily_circuit_breaker_pct: 2.5  # stop trading for the day once daily loss reaches this (rule of halves)
+  max_overall_loss_pct: 10.0    # hard overall drawdown limit
+  max_overall_circuit_breaker_pct: 8.0  # stop trading entirely once reached
+  max_consecutive_losses: 2     # pause for the rest of the day after this many losers in a row
+
+costs:
+  spread_usd: 0.20         # normal-hours spread in USD per oz (15-25c per guide)
+  slippage_usd: 0.05       # normal slippage per fill
+  news_spread_multiplier: 10  # spread multiplier applied around news events
+
+news:
+  calendar_path: "data_files/news_calendar_sample.csv"
+  blackout_minutes_before: 15
+  blackout_minutes_after: 15
+
+account:
+  starting_equity: 100000.0
+  contract_size: 100        # 1 standard lot XAU/USD = 100 oz (broker-dependent, verify)
