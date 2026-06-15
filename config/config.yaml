@@ -40,3 +40,21 @@ news:
 account:
   starting_equity: 100000.0
   contract_size: 100        # 1 standard lot XAU/USD = 100 oz (broker-dependent, verify)
+
+# Stage 2: ML directional filter + sentiment sizing overlay
+ml:
+  enabled: false             # set true to apply the XGBoost filter in the CLI backtest
+  horizon: 4                 # label horizon in bars (4 x M15 = 1h ahead)
+  deadband_atr_mult: 0.25    # forward moves smaller than this x ATR are labeled "flat"
+  min_confidence: 0.4        # XGBoost prob threshold below which a prediction counts as "flat"
+  walk_forward:
+    train_size: 1000         # bars per training window
+    test_size: 250           # bars per out-of-sample test window
+    step_size: 250           # bars to advance between folds (defaults to test_size)
+    num_trials: 1            # number of strategy/parameter variants tried (for Deflated Sharpe)
+
+sentiment:
+  enabled: false             # set true to apply the sentiment sizing overlay
+  method: "lexicon"          # "lexicon" (offline) or "finbert" (requires transformers+torch)
+  agreement_threshold: 0.1   # |score| below this is treated as neutral
+  size_boost: 1.5            # position size multiplier when sentiment agrees with the trade

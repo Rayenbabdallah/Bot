@@ -53,6 +53,28 @@ class AccountConfig(BaseModel):
     contract_size: float
 
 
+class WalkForwardConfig(BaseModel):
+    train_size: int
+    test_size: int
+    step_size: int | None = None
+    num_trials: int = 1
+
+
+class MLConfig(BaseModel):
+    enabled: bool = False
+    horizon: int = 4
+    deadband_atr_mult: float = 0.25
+    min_confidence: float = 0.4
+    walk_forward: WalkForwardConfig
+
+
+class SentimentConfig(BaseModel):
+    enabled: bool = False
+    method: str = "lexicon"
+    agreement_threshold: float = 0.1
+    size_boost: float = 1.5
+
+
 class Config(BaseModel):
     data: DataConfig
     strategy: StrategyConfig
@@ -60,6 +82,8 @@ class Config(BaseModel):
     costs: CostsConfig
     news: NewsConfig
     account: AccountConfig
+    ml: MLConfig | None = None
+    sentiment: SentimentConfig | None = None
 
 
 def load_config(path: str | Path = "config/config.yaml") -> Config:

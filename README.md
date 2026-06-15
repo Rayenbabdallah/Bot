@@ -98,13 +98,77 @@ return %. Per the research guide's realism anchors:
 - Before trusting any result, run walk-forward analysis and check for
   parameter sensitivity ("plateau vs cliff") — not yet implemented here.
 
+## Stage 2: ML directional filter + sentiment overlay
+
+```
+gold_bot/
+  features.py              # feature engineering (returns, vol, EMA distances,
+                            #   ATR percentile, Bollinger bandwidth, rolling Hurst,
+                            #   cyclical time features); add_macro_features() is an
+                            #   extension point for DXY/real-yield series
+  ml/dataset.py             # forward-return labeling (+/-/0 with an ATR deadband)
+  ml/xgboost_model.py        # XGBDirectionalModel: train/predict_proba/predict_direction
+  validation/walk_forward.py # rolling walk-forward train/test folds + efficiency
+  validation/overfitting.py  # Deflated Sharpe Ratio + PBO (CSCV)
+  sentiment/lexicon.py       # offline keyword-based sentiment scorer (default)
+  sentiment/finbert.py       # optional FinBERT scorer (needs transformers+torch)
+  sentiment/service.py       # get_sentiment_score() / sentiment_agrees()
+  strategy/ml_overlay.py     # apply_ml_filter() + apply_sentiment_sizing()
+  cli_ml.py                  # `python -m gold_bot.cli_ml` — walk-forward eval + OOS backtest
+```
+
+Architecture, per the guide's recommendation:
+
+- **XGBoost = hard filter.** `apply_ml_filter` zeroes out a technical entry
+  signal unless the XGBoost model's predicted direction (trained on
+  technical+regime+time features, `gold_bot/features.py`) agrees. The model
+  predicts {-1, 0, 1} (down/flat/up) over `ml.horizon` bars with an
+  ATR-deadband label (`ml.deadband_atr_mult`) and a confidence threshold
+  (`ml.min_confidence`) below which it abstains (0).
+- **Sentiment = sizing overlay, not a veto.** `apply_sentiment_sizing` only
+  *boosts* position size (`sentiment.size_boost`, default 1.5x) when news
+  sentiment agrees with the trade direction beyond
+  `sentiment.agreement_threshold`; it never blocks a trade. Defaults to a
+  dependency-free lexicon scorer (`gold_bot/sentiment/lexicon.py`); set
+  `sentiment.method: "finbert"` and install `transformers`+`torch` for the
+  real FinBERT model.
+- **Validation is mandatory before trusting any of this.** `cli_ml` runs
+  rolling walk-forward folds and reports:
+  - **Walk-forward efficiency** (OOS/IS accuracy) — the guide's threshold is
+    **< 0.5 means overfit, don't use it**.
+  - **Deflated Sharpe Ratio** (`validation/overfitting.py`) — corrects the
+    OOS Sharpe for the number of trials/parameter variants tried
+    (`ml.walk_forward.num_trials`); DSR should be well above 0.95 before
+    trusting the result.
+  - **PBO via CSCV** (`probability_of_backtest_overfitting`) — pass it a
+    DataFrame of per-period returns for multiple parameter variants (one
+    column each) when you sweep parameters; not run by default since it
+    needs >1 trial.
+
+### Running it
+
+```bash
+python -m gold_bot.cli_ml --refresh-data
+# with a sentiment overlay, given a text file of headlines (one per line):
+python -m gold_bot.cli_ml --headlines-file headlines.txt
+```
+
+Set `ml.enabled` / `sentiment.enabled` to `true` in `config/config.yaml` to
+document intent to use the overlay (the Stage 1 `cli.py` backtest does not
+yet read these flags - `cli_ml.py` is the dedicated evaluation entry point).
+
+On the bundled synthetic (random-walk) data, walk-forward efficiency comes
+out ~0.46 and DSR ~0.23 - correctly flagging "don't use this," which is the
+expected/healthy outcome for a strategy with no real edge. Re-run against
+real historical XAU/USD data to get a meaningful read.
+
 ## Roadmap (per the research guide)
 
-- **Stage 0/1 (this repo so far)**: data + indicators + baseline strategy +
-  risk-aware backtester. ✅
-- **Stage 2**: ML/sentiment overlay — XGBoost directional filter on
-  technical+macro+regime features, FinBERT sentiment agreement filter,
-  walk-forward + Deflated Sharpe + PBO validation. Not yet implemented.
+- **Stage 0/1**: data + indicators + baseline strategy + risk-aware
+  backtester. ✅
+- **Stage 2**: ML directional filter (XGBoost) + sentiment sizing overlay +
+  walk-forward/Deflated Sharpe/PBO validation. ✅ (validate against real data
+  before enabling)
 - **Stage 3**: ≥2 months demo MT5 forward test to validate
   execution/slippage assumptions against the backtest.
 - **Stage 4**: Prop-firm evaluation (smallest account first) using

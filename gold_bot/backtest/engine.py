@@ -137,6 +137,8 @@ def run_backtest(df: pd.DataFrame, cfg: Config) -> BacktestResult:
                     stop_distance=stop_distance_price,
                     contract_size=account_cfg.contract_size,
                 )
+                if "size_multiplier" in df.columns:
+                    size *= prev_bar["size_multiplier"]
 
                 if size > 0:
                     position = {
