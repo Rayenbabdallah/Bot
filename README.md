@@ -162,6 +162,52 @@ out ~0.46 and DSR ~0.23 - correctly flagging "don't use this," which is the
 expected/healthy outcome for a strategy with no real edge. Re-run against
 real historical XAU/USD data to get a meaningful read.
 
+## Stage 3: MT5 execution + demo forward-test loop
+
+```
+gold_bot/execution/
+  mt5_client.py    # MT5Client: thin wrapper over the MetaTrader5 package
+                    #   (Windows-only, lazy import - everything else works without it)
+  live_runner.py    # run_once(): rebuilds signals from latest bars, applies the
+                    #   same ATR sizing/risk checks as the backtest, sends orders
+  state_store.py    # persists RiskState + reconciliation watermark to JSON
+                    #   so a restart can't reset the daily circuit breaker
+  dashboard.py       # status_report()/format_report(): equity, daily-loss
+                      #   budget used, open risk, halts
+gold_bot/cli_live.py # `python -m gold_bot.cli_live` — the live/demo loop
+```
+
+**Design**: `run_once` mirrors `backtest/engine.py` as closely as possible -
+same indicators/signals/ML filter, same ATR-based stop/target/sizing, same
+`RiskState` circuit breakers - so the backtest remains a meaningful predictor
+of live behavior. SL/TP are sent with the order so the broker enforces them
+even if the bot is offline; `reconcile_closed_trades` folds the resulting
+P&L from MT5's trade history back into `RiskState` each cycle.
+
+### Running it
+
+Requires Windows with a logged-in MT5 terminal and `pip install MetaTrader5`
+(not installed here - this package can't run on Linux). Set credentials via
+env vars, not config.yaml:
+
+```bash
+export MT5_LOGIN=12345678
+export MT5_PASSWORD=...
+export MT5_SERVER=YourBroker-Demo
+
+python -m gold_bot.cli_live --status   # one-off status report
+python -m gold_bot.cli_live --once     # single cycle (e.g. for cron)
+python -m gold_bot.cli_live            # continuous loop (poll_interval_seconds)
+```
+
+Configure `execution.symbol` to match your broker's exact XAU/USD symbol
+name (e.g. "XAUUSD", "GOLD", "XAUUSD.s") and `execution.magic_number` to a
+value unique to this bot so it doesn't manage other EAs' positions.
+
+`tests/test_execution.py` exercises `run_once`/`reconcile_closed_trades`/
+`status_report` against a `FakeMT5Client` implementing the same interface,
+so the live-loop logic is tested without MT5 installed.
+
 ## Roadmap (per the research guide)
 
 - **Stage 0/1**: data + indicators + baseline strategy + risk-aware
@@ -169,18 +215,12 @@ real historical XAU/USD data to get a meaningful read.
 - **Stage 2**: ML directional filter (XGBoost) + sentiment sizing overlay +
   walk-forward/Deflated Sharpe/PBO validation. ✅ (validate against real data
   before enabling)
-- **Stage 3**: ≥2 months demo MT5 forward test to validate
-  execution/slippage assumptions against the backtest.
+- **Stage 3**: MT5 execution + demo forward-test loop with persisted risk
+  state and a status dashboard. ✅ Run on a DEMO account for ≥2 months to
+  validate execution/slippage assumptions against the backtest before risking
+  an evaluation fee.
 - **Stage 4**: Prop-firm evaluation (smallest account first) using
   0.25–0.5% risk per trade.
-
-## Live execution (not yet implemented)
-
-The architecture is designed so a `gold_bot/execution/` module using the
-`MetaTrader5` Python package can be added later: it would consume the same
-`signal` + `RiskState` logic from `gold_bot/strategy` and `gold_bot/risk`,
-translating accepted signals into MT5 orders, while the backtest engine
-remains the source of truth for strategy logic validation.
 
 ## Caveats
 

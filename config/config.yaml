@@ -58,3 +58,14 @@ sentiment:
   method: "lexicon"          # "lexicon" (offline) or "finbert" (requires transformers+torch)
   agreement_threshold: 0.1   # |score| below this is treated as neutral
   size_boost: 1.5            # position size multiplier when sentiment agrees with the trade
+
+# Stage 3: live/demo execution via MetaTrader5
+execution:
+  symbol: "XAUUSD"           # broker symbol name (verify exact spelling, e.g. "XAUUSD" vs "GOLD")
+  magic_number: 20260615     # unique ID tagging this bot's orders
+  n_bars: 500                # bars of history pulled each cycle (must exceed trend_ema warm-up)
+  poll_interval_seconds: 60  # how often the live loop checks for new bars/signals
+  state_path: "data_files/live_risk_state.json"
+  mt5_login: null            # set via MT5_LOGIN env var instead of committing credentials
+  mt5_server: null           # set via MT5_SERVER env var
+

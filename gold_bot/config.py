@@ -75,6 +75,16 @@ class SentimentConfig(BaseModel):
     size_boost: float = 1.5
 
 
+class ExecutionConfig(BaseModel):
+    symbol: str
+    magic_number: int
+    n_bars: int = 500
+    poll_interval_seconds: int = 60
+    state_path: str = "data_files/live_risk_state.json"
+    mt5_login: int | None = None
+    mt5_server: str | None = None
+
+
 class Config(BaseModel):
     data: DataConfig
     strategy: StrategyConfig
@@ -84,6 +94,7 @@ class Config(BaseModel):
     account: AccountConfig
     ml: MLConfig | None = None
     sentiment: SentimentConfig | None = None
+    execution: ExecutionConfig | None = None
 
 
 def load_config(path: str | Path = "config/config.yaml") -> Config:
