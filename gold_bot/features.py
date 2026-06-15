@@ -117,3 +117,12 @@ FEATURE_COLUMNS = [
     "atr_pct_rank", "bb_bandwidth", "hurst",
     "hour_sin", "hour_cos", "weekday_sin", "weekday_cos",
 ]
+
+
+def macro_feature_columns(df: pd.DataFrame) -> list[str]:
+    """Return the macro_* feature columns present in df (added by
+    `add_macro_features`), for appending to FEATURE_COLUMNS when training
+    the ML model with macro context.
+    """
+    return [c for c in df.columns if c.startswith("macro_")]
+

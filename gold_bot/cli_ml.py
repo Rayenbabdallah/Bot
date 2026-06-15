@@ -21,7 +21,9 @@ from gold_bot.backtest.metrics import compute_metrics
 from gold_bot.cli import BARS_PER_YEAR
 from gold_bot.config import load_config
 from gold_bot.data.fetch import load_or_fetch
-from gold_bot.features import build_features
+from gold_bot.data.macro import load_or_fetch_macro
+from gold_bot.features import (FEATURE_COLUMNS, add_macro_features,
+                                build_features, macro_feature_columns)
 from gold_bot.indicators import add_indicators
 from gold_bot.ml.dataset import build_dataset
 from gold_bot.sentiment.service import get_sentiment_score
@@ -67,7 +69,17 @@ def main() -> None:
     df = generate_signals(df, cfg.strategy)
     df = build_features(df)
 
-    X, y = build_dataset(df, horizon=cfg.ml.horizon, deadband_atr_mult=cfg.ml.deadband_atr_mult)
+    feature_columns = FEATURE_COLUMNS
+    if cfg.macro and cfg.macro.enabled:
+        macro = load_or_fetch_macro(cfg.macro.cache_path, series=cfg.macro.series,
+                                     refresh=args.refresh_data)
+        print(f"Loaded macro data: {list(macro.columns)}, "
+              f"{macro.index.min()} to {macro.index.max()}")
+        df = add_macro_features(df, macro, columns=tuple(cfg.macro.series.keys()))
+        feature_columns = feature_columns + macro_feature_columns(df)
+
+    X, y = build_dataset(df, horizon=cfg.ml.horizon, deadband_atr_mult=cfg.ml.deadband_atr_mult,
+                          feature_columns=feature_columns)
     print(f"Dataset: {len(X)} samples, label balance: {y.value_counts(normalize=True).to_dict()}")
 
     wf_cfg = cfg.ml.walk_forward

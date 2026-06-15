@@ -85,6 +85,12 @@ class ExecutionConfig(BaseModel):
     mt5_server: str | None = None
 
 
+class MacroConfig(BaseModel):
+    enabled: bool = False
+    series: dict[str, str] = {"dxy": "DTWEXBGS", "real_yield_10y": "DFII10"}
+    cache_path: str = "data_files/macro_data.parquet"
+
+
 class Config(BaseModel):
     data: DataConfig
     strategy: StrategyConfig
@@ -95,6 +101,7 @@ class Config(BaseModel):
     ml: MLConfig | None = None
     sentiment: SentimentConfig | None = None
     execution: ExecutionConfig | None = None
+    macro: MacroConfig | None = None
 
 
 def load_config(path: str | Path = "config/config.yaml") -> Config:

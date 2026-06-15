@@ -162,6 +162,35 @@ out ~0.46 and DSR ~0.23 - correctly flagging "don't use this," which is the
 expected/healthy outcome for a strategy with no real edge. Re-run against
 real historical XAU/USD data to get a meaningful read.
 
+## Macro features (DXY, US 10Y real yields)
+
+```
+gold_bot/data/macro.py   # fetch_macro_data(): FRED's no-key CSV endpoint
+                          #   (fredgraph.csv) for DXY ("DTWEXBGS") and the
+                          #   10Y real yield ("DFII10"), with a parquet cache
+gold_bot/features.py     # add_macro_features(): forward-fills daily macro
+                          #   series onto intraday bars as macro_<name> and
+                          #   macro_<name>_chg columns
+                          # macro_feature_columns(): lists the macro_* columns
+                          #   present, for appending to FEATURE_COLUMNS
+```
+
+Set `macro.enabled: true` in `config/config.yaml` and `cli_ml.py` will fetch
+(or load from cache) DXY and the 10Y real yield from FRED, merge them in as
+features (`macro_dxy`, `macro_dxy_chg`, `macro_real_yield_10y`,
+`macro_real_yield_10y_chg`), and include them in the XGBoost feature set
+automatically. Series IDs are configurable under `macro.series` if you want
+different FRED series (e.g. "DTWEXM" for the major-currencies dollar index).
+
+As the guide stresses: **the DXY/real-yield ↔ gold relationship is unstable**
+(it decouples during safe-haven and central-bank-buying regimes), so these
+are inputs to the model, not hard rules - walk-forward validation should
+confirm they actually help before relying on them.
+
+FRED's `fredgraph.csv` endpoint requires no API key, but is blocked by this
+sandbox's network egress (only `github.com` is allowlisted here) - fetch it
+from an environment with normal internet access.
+
 ## Stage 3: MT5 execution + demo forward-test loop
 
 ```

@@ -69,3 +69,13 @@ execution:
   mt5_login: null            # set via MT5_LOGIN env var instead of committing credentials
   mt5_server: null           # set via MT5_SERVER env var
 
+# Macro context features (DXY, US 10Y real yields) - per the guide, gold is
+# roughly the inverse of DXY/real yields, but treat these as *features*, not
+# hard rules (the correlation breaks down in safe-haven/CB-buying regimes).
+macro:
+  enabled: false
+  series:
+    dxy: "DTWEXBGS"          # Trade Weighted U.S. Dollar Index: Broad
+    real_yield_10y: "DFII10" # 10-Year Treasury Inflation-Indexed (real yield)
+  cache_path: "data_files/macro_data.parquet"
+
