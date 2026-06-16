@@ -3,9 +3,9 @@
 
 data:
   symbol: "GC=F"          # yfinance ticker for Gold futures (proxy for XAU/USD); try "XAUUSD=X" too
-  interval: "15m"         # bar interval: 15m / 1h
-  period: "60d"           # yfinance lookback window (15m data is limited to ~60d on yfinance)
-  cache_path: "data_files/xauusd_15m.parquet"
+  interval: "1h"         # bar interval: 15m / 1h
+  period: "730d"           # yfinance lookback window (15m data is limited to ~60d on yfinance)
+  cache_path: "data_files/xauusd_1h.parquet"
 
 strategy:
   fast_ema: 20
