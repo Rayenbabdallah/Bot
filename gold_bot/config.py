@@ -25,6 +25,10 @@ class StrategyConfig(BaseModel):
     session_start_utc: str
     session_end_utc: str
     trade_days: list[int]
+    # Regime filter: skip entries when the market is ranging / low-volatility.
+    # 0.0 = disabled (reproduces previous behaviour).
+    regime_atr_pct_min: float = 0.0   # e.g. 0.35 → only trade when ATR ranks in top 65% of last 100 bars
+    regime_bb_min: float = 0.0         # e.g. 0.020 → only trade when Bollinger bandwidth > 2%
 
 
 class RiskConfig(BaseModel):

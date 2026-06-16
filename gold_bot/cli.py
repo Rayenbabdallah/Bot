@@ -14,13 +14,16 @@ from gold_bot.data.fetch import load_or_fetch
 from gold_bot.indicators import add_indicators
 from gold_bot.strategy.trend_pullback import generate_signals
 
+# Gold futures (GC=F) trade ~23 h/day Mon-Fri plus a Sunday session,
+# giving roughly 5,760 trading hours per calendar year — not 8,760 (24×365).
+# Using the wrong denominator overstates both CAGR and Sharpe by ~√(8760/5760) ≈ 1.23×.
 BARS_PER_YEAR = {
-    "1m": 60 * 24 * 365,
-    "5m": 12 * 24 * 365,
-    "15m": 4 * 24 * 365,
-    "30m": 2 * 24 * 365,
-    "1h": 24 * 365,
-    "1d": 252,
+    "1m":  5760 * 60,
+    "5m":  5760 * 12,
+    "15m": 5760 * 4,
+    "30m": 5760 * 2,
+    "1h":  5760,
+    "1d":  252,
 }
 
 
