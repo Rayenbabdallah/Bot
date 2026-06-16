@@ -35,7 +35,7 @@ costs:
   news_spread_multiplier: 10  # spread multiplier applied around news events
 
 news:
-  calendar_path: "data_files/news_calendar_sample.csv"
+  calendar_path: "data_files/news_calendar_2024_2026.csv"
   blackout_minutes_before: 15
   blackout_minutes_after: 15
 

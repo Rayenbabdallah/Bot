@@ -6,6 +6,7 @@ venv/
 data_files/*.parquet
 data_files/*.csv
 !data_files/news_calendar_sample.csv
+!data_files/news_calendar_2024_2026.csv
 .pytest_cache/
 *.png
 .ipynb_checkpoints/
