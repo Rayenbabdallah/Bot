@@ -18,14 +18,11 @@ strategy:
   session_start_utc: "12:00"
   session_end_utc: "16:00"
   trade_days: [1, 2, 3, 4]  # Mon=0 ... Sun=6; default Tue-Fri (per guide: Mondays range, Fridays thin)
-  # Regime filter: skip entries during low-volatility / ranging conditions.
-  # These values were selected based on the 730-day 1h real-data backtest
-  # to reduce max drawdown from ~6.5% to <4% while preserving the trend edge.
-  regime_atr_pct_min: 0.35  # skip if ATR ranks below 35th percentile (bottom third of vol range)
-  regime_bb_min: 0.018       # skip if Bollinger bandwidth < 1.8% (tight squeeze)
+  regime_atr_pct_min: 0.0   # 0 = disabled; re-enable and tune if live drawdown is too high
+  regime_bb_min: 0.0         # 0 = disabled
 
 risk:
-  risk_per_trade_pct: 0.5       # % of equity risked per trade
+  risk_per_trade_pct: 0.3       # % of equity risked per trade (0.3% → ~4% max DD on backtest; raise to 0.5% once funded and proven)
   daily_loss_limit_pct: 5.0     # prop-firm style hard daily loss limit (equity based)
   daily_circuit_breaker_pct: 2.5  # stop trading for the day once daily loss reaches this (rule of halves)
   max_overall_loss_pct: 10.0    # hard overall drawdown limit
