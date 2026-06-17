@@ -15,14 +15,14 @@ strategy:
   atr_stop_mult: 2.0      # stop loss = entry +/- atr_stop_mult * ATR
   reward_risk: 2.0         # take profit = stop_distance * reward_risk
   pullback_lookback: 5    # bars to look back for swing high/low breakout trigger
-  session_start_utc: "12:00"
-  session_end_utc: "16:00"
+  session_start_utc: "08:00"
+  session_end_utc: "17:00"
   trade_days: [1, 2, 3, 4]  # Mon=0 ... Sun=6; default Tue-Fri (per guide: Mondays range, Fridays thin)
   regime_atr_pct_min: 0.0   # 0 = disabled; re-enable and tune if live drawdown is too high
   regime_bb_min: 0.0         # 0 = disabled
 
 risk:
-  risk_per_trade_pct: 0.3       # % of equity risked per trade (0.3% → ~4% max DD on backtest; raise to 0.5% once funded and proven)
+  risk_per_trade_pct: 0.4       # % of equity risked per trade (0.4% → ~5.2% max DD estimate; within FTMO 10% hard limit)
   daily_loss_limit_pct: 5.0     # prop-firm style hard daily loss limit (equity based)
   daily_circuit_breaker_pct: 2.5  # stop trading for the day once daily loss reaches this (rule of halves)
   max_overall_loss_pct: 10.0    # hard overall drawdown limit
